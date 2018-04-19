@@ -1,0 +1,19 @@
+{
+  "ImageId": "ami-b144195a",
+  "KeyName": "tprg-key",
+  "NetworkInterfaces": [
+    {
+      "DeviceIndex": 0,
+      "SubnetId": "subnet-6b97c800",
+      "Groups": [
+        "sg-4c5b2421"
+      ],
+      "AssociatePublicIpAddress": true
+    }
+  ],
+  "InstanceType": "r3.8xlarge",
+  "Placement": {
+    "AvailabilityZone": "eu-central-1a"
+  },
+  "UserData": "IyEvYmluL2Jhc2gKc3VkbyB5dW0gZ3JvdXBpbnN0YWxsIC15ICJEZXZlbG9wbWVudCBUb29scyIKc3VkbyB5dW0gaW5zdGFsbCAteSBjbWFrZSBwZXJmIGphdmEtMS44LjAtb3Blbmpkay1kZXZlbC1kZWJ1Zwp3Z2V0IGh0dHBzOi8vZGwuZmVkb3JhcHJvamVjdC5vcmcvcHViL2VwZWwvZXBlbC1yZWxlYXNlLWxhdGVzdC03Lm5vYXJjaC5ycG0Kc3VkbyBycG0gLVV2aCBlcGVsLXJlbGVhc2UtbGF0ZXN0LTcubm9hcmNoLnJwbQpzdWRvIHl1bSBpbnN0YWxsIC15IHNpZWdlCmdpdCBjbG9uZSBodHRwczovL2dpdGh1Yi5jb20vanZtLXByb2ZpbGluZy10b29scy9wZXJmLW1hcC1hZ2VudC5naXQKbWtkaXIgfi9iaW4KY2QgcGVyZi1tYXAtYWdlbnQgJiYgY21ha2UgQ01ha2VMaXN0cy50eHQgJiYgbWFrZSAmJiBiaW4vY3JlYXRlLWxpbmtzLWluIH4vYmluCmdpdCBjbG9uZSBodHRwczovL2dpdGh1Yi5jb20vYnJlbmRhbmdyZWdnL0ZsYW1lR3JhcGguZ2l0CmVjaG8gJ2V4cG9ydCBKQVZBX09QVFM9Ii1YWDorVXNlRzFHQyAtWFg6TWF4R0NQYXVzZU1pbGxpcz0yMDAgLVhYOitQcmVzZXJ2ZUZyYW1lUG9pbnRlciAtWFg6K1VubG9ja0RpYWdub3N0aWNWTU9wdGlvbnMgLVhYOitEZWJ1Z05vblNhZmVwb2ludHMiJyA+IH4vLmJhc2hfcHJvZmlsZQo="
+}
