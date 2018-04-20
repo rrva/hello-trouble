@@ -264,3 +264,70 @@ I en tredje terminal, undersök systemets last med verktyget *top*
 ### Rita en flame graph
 
 Nu till det mest spännande, efter mycket om och men! Vi ska rita en flame graph över systemets prestanda.
+
+I en fjärde terminal, logga in och fånga en flame graph medan lasttestet kör. Här kör vi som root, övningen blev upplagd så men egentligen är det inte nödvändigt.
+
+	ssh ec2
+	sudo -i
+	
+Vi ska nu spela in vilka metodanrop som appen gör med verktyget `perf`. 
+
+Appen måste köras med speciella jvm-flaggor för detta. Det är redan förberett, men det är dessa vi talar om. Appen läser via sina startskript en miljö-variabel som heter JAVA_OPTS. Kolla in vilka inställningar som gäller:
+
+	echo $JAVA_OPTS
+
+
+* I katalogen `/perf-map-agent` finns ett gäng prestanda-mätnings-skript redan utkopierade från <https://github.com/jvm-profiling-tools/perf-map-agent>). I katalogen `~/bin` finns lite länkar till de som du kan köra direkt.
+	 
+* I katalogen `/perf-map-agent/FlameGraph` finns ytterligare ett par skript förberedda från <https://github.com/brendangregg/FlameGraph>
+
+Sätt miljövariabeln `FLAMEGRAPH_DIR` till där dessa skript finns
+
+	export FLAMEGRAPH_DIR=/perf-map-agent/FlameGraph
+
+Ta reda på process-id:t för din java-process
+
+	jps
+	
+Spela in events (metodanrop i detta fall) med linux-verktyget `perf` översätt dem till java-metodnamn med `perf-map-agent` och rita en flame-graph med `FlameGraph`-skripten:
+
+	~/bin/perf-java-flames <process-id för din java-process>
+	
+Efter ett tag skapas en fil
+
+	flamegraph-<pid>.svg
+	
+I mitten av körningen som genererar en flamegraph-fil är inspelningen av events klar. Då kan du växla till den terminalen som kör `loadtest.sh` och avbryta det med <kbd>CTRL</kbd>+<kbd>C</kbd> så får maskinen mer resurser att köra klart utritandet av grafen.
+
+Kopiera `flamegraph-<pid>.svg` filen till ~ec2-user så du lätt kan kopiera hem den via `scp`
+
+	cp	flamegraph*.svg ~ec2-user
+	
+På din maskin, hämta hem filen
+
+	scp ec2:*.svg .
+	
+Öppna filen i nån svg-läsare, Google Chrome funkar bäst	
+## Klart!
+
+Eventuellt kan din fil sakna viktiga led i metodanropen, då kan man göra om körningen med några miljövariabler satta. Det som saknas beror på fenomenen inlining (att vissa metodanrop optimeras bort genom att metodkroppens kod klistras in i en existerande metod till exempel).
+
+För att få lite högre upplösning på din graf, sätt dem och kör om `perf-java-flames` (med lasttestet igång igen om du stoppat det).
+
+	export PERF_MAP_OPTIONS=unfoldall
+	export PERF_COLLAPSE_OPTS=--inline
+	
+## Diskussion om vad undersökningen gav
+
+* Diskutera resultaten med din labbkompis. Var ligger flaskhalsen?
+* Läs koden
+* Läs koden i tredjepartsbibliotek
+* Föreslå förbättringar
+
+Öppna frågor
+
+* Vad är för/nackdelen med flamegraphs?
+* Hur gör man om man inte kör under Linux? (googla)
+
+
+	
