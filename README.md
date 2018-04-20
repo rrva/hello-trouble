@@ -2,9 +2,16 @@
 
 Den här övningen går ut på att lära sig att mäta och felsöka ett prestandaproblem i en existerande applikation.
 
-## A. Systemet vi ska undersöka
+Den här övningen passar bäst att göra på en dator som kör OSX eller Linux. Windows funkar, men alla steg är inte kvalitetssäkrade.
 
-Vi ska undersöka en servertjänst som vi kallar hello-dataloader, som exponerar lite data via GraphQL. GraphQL är ett frågespråk för 
+## A. Para ihop er i lagom stora grupper, 2-3 pers
+
+Ni kommer få ett grupp-nummer tilldelade av oss. Kom ihåg det för senare bruk.
+
+
+## B. Systemet vi ska undersöka
+
+Vi ska undersöka en servertjänst som vi kallar hello-dataloader, som exponerar lite data via GraphQL. GraphQL är ett frågespråk för att låta en klient speca vilket data (vilka fält) den vill ha från servern. 
 
 För att bygga:
 
@@ -18,10 +25,13 @@ Packa upp filen build/distributions/hello-dataloader-1.0-SNAPSHOT.{tar/zip} (fö
 	
 För att köra:
 
-	cd hello-dataloader-1.0-SNAPSHOT/bin
-	./hello-dataloader
+	./hello-dataloader-1.0-SNAPSHOT/bin/hello-dataloader
+
+På windows heter startskriptet `hello-dataloader.bat`
 	
 Utforska appen, besök <http://localhost:8080/graphiql.html>
+
+Nu kommer du till ett frågeverktyg som heter _GraphiQL_
 
 Prova t.ex. graphql-queryn
 
@@ -43,6 +53,7 @@ Eller
   myContent {
     all {
       id
+      name
       genres {
         recommended {
           byline
@@ -54,28 +65,69 @@ Eller
 }
 ```	
 
+Som du ser anger klienten lite vilka fält den vill ha och datat kan hänga ihop som en graf.
+
 Det vi har här är ett system skrivet i Kotlin (nästan som Java), som kör på JVM:en, som servar lite dummy-data via GraphQL.
 
-Vi ska nu lägga på lite last.
+## C. Lägg på lite last och mät
 
 Installera lasttest-verktyget siege
 
 	brew install siege
 
-Kör en lastgenerator som skickar 6 samtidiga graphql-frågor till vår app.
+### Kör en lastgenerator 
+
+Här en lastgenerator som skickar 6 samtidiga graphql-frågor till vår app:
 
 	cd src/test/resources/
 	./loadtest.sh
+	
+Du kan avbryta testet med <kbd>CTRL</kbd>+<kbd>C</kbd>	
+### Mät 
 
-## B. Skapa en testmiljö
+* Svarstider
+* CPU-last (kolla t.ex. med `top` i Linux eller Activity Monitor på Mac)
 
-### 1. Installera Amazon AWS EC2 commandline tools
+### Frågor
+
+* Vilka svarstider får du?
+* Hur beter sig svarstiderna om du ökar antalet samtidiga klienter `-c 6` i siege
+
+### Var ligger flaskhalsarna för att kunna öka flödet?
+
+#### Kör en profilerare som mäter var CPU-tid spenderas
+
+För att mäta var tid går åt, kan vi köra den gamla trotjänaren VisualVM (`jvisualvm`). Detta måste du göra medans lastgeneratorn kör, eller hur?
+
+1. Starta VisualVM t.ex. med `jvisualvm`
+2. Koppla upp dig mot appen under sektionen Local (den som kör **se.rrva.App**) genom att dubbelklicka. Ha tålamod, det tar lång tid.
+3. Välj fliken **Sampler**
+4. Tryck på knappen **CPU** under Sample
+5. Vänta 30 sekunder
+6. Ta nu ett snapshot genom att klicka på **Snapshot**
+7. Längst ner finns nu knappen **Hot spots**
+
+### Frågor
+
+* Vad ser vi hittills?
+* Några ledtrådar om var appen kan ha prestandaproblem?
+
+Kanske har du redan nu hittat problemen. I så fall bra! 
+
+Nu ska vi undersöka ett alternativt sätt att mäta och visualisera prestanda som kallas **Flame Graphs**. Flame graphs är helt enkelt en graf som visar metoderna i ditt program som olika breda staplar beroende på hur stor andel av den totala tiden som programmet spenderar där, och på höjden är de ordnade efter stacken, dvs `metodA()` ropar på `metodB()` som ropar på `methodC()`. För att göra det är det bäst vi kör i en känd testmiljö och under Linux (andra sätt finns att rita dessa flame graphs men där får vi bra resultat för denna övning).
+
+
+
+## D. Skapa en testmiljö
+
+### Installera Amazon AWS EC2 commandline tools
 
 #### Instruktioner
 
 Det finns många sätt att installera aws cli på, se här (eller hoppa till nästa punkt om du har Mac):
 
 <https://docs.aws.amazon.com/cli/latest/userguide/installing.html>
+
 
 #### Sammanfattning instruktioner för Mac, annars läs länken ovan
 
@@ -112,12 +164,18 @@ Ange en nyckel från <https://docs.google.com/spreadsheets/d/15N-IyO5bFvOB5-3zg_
 	 		
 	
 
-### TA EN PAUS KANSKE?
+## TA EN PAUS KANSKE?
 
 	 		
-### C. Starta en EC2-instans
+### Starta en EC2-instans
 
-Vi kommer att begära att en instans startas enligt vad som står i filen ec2-tprg.json som ligger i git-repot du klonade
+Vi kommer att begära att en instans startas enligt vad som står i filen ec2.json som ligger i *hello-trouble*-git-repot.
+
+Du kan klona ut det också:
+
+	https://github.com/rrva/hello-trouble.git
+
+Begär att få köra en Amazon EC2-instans till spot-marknads-pris, som kommer stängas ner automatiskt efter 2 timmar.
 
 	aws ec2 request-spot-instances --block-duration-minutes 120 --launch-specification file://ec2.json
 	
@@ -135,7 +193,7 @@ Om spot instance request av någon anledning inte funkar, skapa en vanlig instan
 	
 #### Konfigurera ssh
 
-För bekvämlighet, kan vi konfigurera ssh-nyckeln som krävs för att logga in.
+För bekvämlighet, kan vi konfigurera ssh-nyckeln som krävs för att logga in och spara den ip-address du fick under ett kortfattat namn, vi väljer att kalla maskinen för aliaset `ec2`. På så sätt blir alla `ssh`-kommandon vi kommer köra enklare.
 
 Kopiera tprg-key.pem från google doc:et och spara som `~/.ssh/tprg-key.pem`
 	
@@ -146,7 +204,7 @@ Se till att filen bara är läsbar av din användare:
 Lägg i i filen **~/.ssh/config**:	
 	
 ```
-Host ec2-tprg
+Host ec2
     HostName <ip-adress för din instans>
     User ec2-user
     IdentityFile ~/.ssh/tprg-key.pem
@@ -154,15 +212,55 @@ Host ec2-tprg
     StrictHostKeyChecking no
 ```
 
+På windows 10 följ <https://winaero.com/blog/enable-openssh-client-windows-10/>
+
 #### Kontrollera inloggning via ssh
 
-	ssh ec2-trpg
+	ssh ec2
 	
-Om allt gått bra får du en bash-prompt på din nya instans.
+Om allt gått bra får du en bash-prompt på din nya instans. Kontrollera att t.ex. `siege` är installerat (om du är för het på gröten, vänta en minut, kanske setup-skriptet fortfarande kör). 
+
+#### Om inte setup-skriptet funkar (t.ex. om du inte skapat en spot-instans)
+
+Kopiera `setup.sh` från hello-trouble-repot:
+
+	scp setup.sh ec2:
+	ssh ec2 ./setup.sh
+	
+	
+Nu ska du t.ex. ha verktyget `siege` på din ec2-instans.
+
+#### Starta hello-dataloader på ec2
+
+Kopiera koden dit. Från katalogen med hello-dataloader-repot:
+
+	scp build/distributions/hello-dataloader-1.0-SNAPSHOT.tar ec2:
+
+Starta appen
+
+	ssh ec2
+	tar xf hello-dataloader-1.0-SNAPSHOT.tar
+	./hello-dataloader-1.0-SNAPSHOT/bin/hello-dataloader
+
+I en annan terminal, kopiera upp lasttest-skripten till ec2 och starta
+
+	scp src/test/resources/loadtest* ec2:
+	ssh ec2
+	./loadtest.sh
+	
+	
+I en tredje terminal, undersök systemets last med verktyget *top*
+
+	ssh ec2
+	top
+				
+	
+### Frågor
+
+1. Hur beter sig systemets svarstider?
+2. Hur ser maskinens totala last ut?	
 
 
+### Rita en flame graph
 
-
-
-
-
+Nu till det mest spännande, efter mycket om och men! Vi ska rita en flame graph över systemets prestanda.
