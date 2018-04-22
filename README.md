@@ -114,11 +114,11 @@ För att mäta var tid går åt, kan vi köra den gamla trotjänaren VisualVM (`
 
 Kanske har du redan nu hittat problemen. I så fall bra! 
 
+
+
+## D. Skapa en testmiljö för att generera Flame Graphs
+
 Nu ska vi undersöka ett alternativt sätt att mäta och visualisera prestanda som kallas **Flame Graphs**. Flame graphs är helt enkelt en graf som visar metoderna i ditt program som olika breda staplar beroende på hur stor andel av den totala tiden som programmet spenderar där, och på höjden är de ordnade efter stacken, dvs `metodA()` ropar på `metodB()` som ropar på `methodC()`. För att göra det är det bäst vi kör i en känd testmiljö och under Linux (andra sätt finns att rita dessa flame graphs men där får vi bra resultat för denna övning).
-
-
-
-## D. Skapa en testmiljö
 
 ### Installera Amazon AWS EC2 commandline tools
 
@@ -157,11 +157,19 @@ Om du vill, gör PATH-inställingen permanent
 	
 #### Konfigurera säkerhetsnyckel för aws-cli
 
+
 	aws configure
+
+Använd inte ett eget AWS-konto, saker i tutorialen är skapade utifrån mitt AWS-konto :)
 
 Ange en nyckel från <https://docs.google.com/spreadsheets/d/15N-IyO5bFvOB5-3zg_XE7giiHOw9B0JJ6gZJLNAxqd0/edit?usp=sharing>
 		
-	 		
+Ange `eu-central-1` som default region.
+
+Kontrollera att din konfiguration i *~/.aws/config* ser ut så här:
+
+	[default]
+	region = eu-central-1
 	
 
 ## TA EN PAUS KANSKE?
