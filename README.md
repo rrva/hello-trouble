@@ -148,11 +148,11 @@ Om inte, installera
 
 ##### Lägg till python-skript-katalog till din sökväg
 
-	export PATH=$PATH:Library/Python/2.7/bin
+	export PATH=$PATH:~/Library/Python/2.7/bin
 	
 Om du vill, gör PATH-inställingen permanent
 
-	echo 'export PATH=$PATH:Library/Python/2.7/bin' >> ~/.bashrc
+	echo 'export PATH=$PATH:~/Library/Python/2.7/bin' >> ~/.bashrc
 	
 	
 #### Konfigurera säkerhetsnyckel för aws-cli
@@ -177,6 +177,7 @@ Du kan klona ut det också:
 
 Begär att få köra en Amazon EC2-instans till spot-marknads-pris, som kommer stängas ner automatiskt efter 2 timmar.
 
+	cd hello-trouble
 	aws ec2 request-spot-instances --block-duration-minutes 120 --launch-specification file://ec2.json
 	
 #### Hitta ip-address för din EC2-instans
@@ -218,11 +219,13 @@ På windows 10 följ <https://winaero.com/blog/enable-openssh-client-windows-10/
 
 	ssh ec2
 	
-Om allt gått bra får du en bash-prompt på din nya instans. Kontrollera att t.ex. `siege` är installerat (om du är för het på gröten, vänta en minut, kanske setup-skriptet fortfarande kör). 
+Om allt gått bra får du en bash-prompt på din nya instans. 
+
+Kontrollera att t.ex. `siege` är installerat genom att försöka köra `siege` (om du är för het på gröten, vänta en minut, kanske setup-skriptet fortfarande kör). 
 
 #### Om inte setup-skriptet funkar (t.ex. om du inte skapat en spot-instans)
 
-Kopiera `setup.sh` från hello-trouble-repot:
+Kopiera `setup.sh` från hello-trouble-repot (behövs bara om siege inte fanns):
 
 	scp setup.sh ec2:
 	ssh ec2 ./setup.sh
@@ -258,7 +261,13 @@ I en tredje terminal, undersök systemets last med verktyget *top*
 ### Frågor
 
 1. Hur beter sig systemets svarstider?
-2. Hur ser maskinens totala last ut?	
+2. Hur ser maskinens totala last ut?
+
+Om du ökar antalet samtidiga anrop i lasttestet (ändra `-c6` till `-c60`)
+
+1. Hur beter sig svarstiderna nu?
+2. Hur beter sig systemets last?
+3. Vad säger detta om flaskhalsen?
 
 
 ### Rita en flame graph
@@ -271,10 +280,6 @@ I en fjärde terminal, logga in och fånga en flame graph medan lasttestet kör.
 	sudo -i
 	
 Vi ska nu spela in vilka metodanrop som appen gör med verktyget `perf`. 
-
-Appen måste köras med speciella jvm-flaggor för detta. Det är redan förberett, men det är dessa vi talar om. Appen läser via sina startskript en miljö-variabel som heter JAVA_OPTS. Kolla in vilka inställningar som gäller:
-
-	echo $JAVA_OPTS
 
 
 * I katalogen `/perf-map-agent` finns ett gäng prestanda-mätnings-skript redan utkopierade från <https://github.com/jvm-profiling-tools/perf-map-agent>). I katalogen `~/bin` finns lite länkar till de som du kan köra direkt.
@@ -308,14 +313,15 @@ På din maskin, hämta hem filen
 	scp ec2:*.svg .
 	
 Öppna filen i nån svg-läsare, Google Chrome funkar bäst	
-## Klart!
+I den fångade filen kan du ibland stöta på många fall av `[unknown]`. Detta beror på en optimering som JVM:en gör som förstör spårningen uppåt i stacken av metodanrop. En speciell JVM-flagga kan hjälpa att återställa detta.
 
-Eventuellt kan din fil sakna viktiga led i metodanropen, då kan man göra om körningen med några miljövariabler satta. Det som saknas beror på fenomenen inlining (att vissa metodanrop optimeras bort genom att metodkroppens kod klistras in i en existerande metod till exempel).
+Starta om din java-process med en ny jvm-flagga. Avbryt den som redan kör med <kbd>CTRL</kbd>+<kbd>C</kbd> eller skicka `kill [process-id]` i en annan terminal.
 
-För att få lite högre upplösning på din graf, sätt dem och kör om `perf-java-flames` (med lasttestet igång igen om du stoppat det).
-
-	export PERF_MAP_OPTIONS=unfoldall
-	export PERF_COLLAPSE_OPTS=--inline
+	export JAVA_OPTS=-XX:+PreserveFramePointer
+	./hello-dataloader-1.0-SNAPSHOT/bin/hello-dataloader
+	
+Kör nu om lasttestet och kör om kommandona som ritar ut en flamegraph.
+	
 	
 ## Diskussion om vad undersökningen gav
 
@@ -324,10 +330,19 @@ För att få lite högre upplösning på din graf, sätt dem och kör om `perf-j
 * Läs koden i tredjepartsbibliotek
 * Föreslå förbättringar
 
-Öppna frågor
+
+
+### Öppna frågor
 
 * Vad är för/nackdelen med flamegraphs?
 * Hur gör man om man inte kör under Linux? (googla)
-
-
 	
+
+### Överkurs
+
+Eventuellt kan din fil fortfarande sakna viktiga led i metodanropen, då kan man göra om körningen med några miljövariabler satta. Det som saknas beror på fenomenen inlining (att vissa metodanrop optimeras bort genom att metodkroppens kod klistras in i en existerande metod till exempel).
+
+För att få lite högre upplösning på din graf, sätt dem och kör om `perf-java-flames` (med lasttestet igång igen om du stoppat det).
+
+	export PERF_MAP_OPTIONS=unfoldall
+	export PERF_COLLAPSE_OPTS=--inline
