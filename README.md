@@ -314,7 +314,7 @@ I mitten av körningen som genererar en flamegraph-fil är inspelningen av event
 
 Kopiera `flamegraph-<pid>.svg` filen till ~ec2-user så du lätt kan kopiera hem den via `scp`
 
-	cp	flamegraph*.svg ~ec2-user
+	cp flamegraph*.svg ~ec2-user
 	
 På din maskin, hämta hem filen
 
