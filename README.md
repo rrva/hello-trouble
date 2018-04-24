@@ -157,14 +157,23 @@ Om du vill, gör PATH-inställingen permanent
 	
 #### Konfigurera säkerhetsnyckel för aws-cli
 
+Om du har använt aws-cli förut och inte vill bli av med dina inställningar
+kan du göra en backup:
 
-	aws configure
+    mv ~/.aws ~/.aws.backup
+
+På slutet av övningen kan du då återställa dina inställningar:
+
+    rm -rf ~/.aws
+    mv ~/.aws.backup ~/.aws
 
 Använd inte ett eget AWS-konto, saker i tutorialen är skapade utifrån mitt AWS-konto :)
 
-Ange en nyckel från <https://docs.google.com/spreadsheets/d/15N-IyO5bFvOB5-3zg_XE7giiHOw9B0JJ6gZJLNAxqd0/edit?usp=sharing>
-		
-Ange `eu-central-1` som default region.
+Paxa en användare från <https://docs.google.com/spreadsheets/d/15N-IyO5bFvOB5-3zg_XE7giiHOw9B0JJ6gZJLNAxqd0/edit?usp=sharing>, välj en användare `tprgX` som svarar mot ditt gruppnummer.
+
+Konfigurera aws cli med nycklar från ovan, ange `eu-central-1` som default region.
+
+	aws configure
 
 Kontrollera att din konfiguration i *~/.aws/config* ser ut så här:
 
@@ -210,7 +219,7 @@ Se till att filen bara är läsbar av din användare:
 	
 	chmod 600 ~/.ssh/tprg-key.pem
 	
-Lägg i i filen **~/.ssh/config**:	
+Lägg till nedanstående i filen **~/.ssh/config**:	
 	
 ```
 Host ec2
@@ -230,16 +239,6 @@ På windows 10 följ <https://winaero.com/blog/enable-openssh-client-windows-10/
 Om allt gått bra får du en bash-prompt på din nya instans. 
 
 Kontrollera att t.ex. `siege` är installerat genom att försöka köra `siege` (om du är för het på gröten, vänta en minut, kanske setup-skriptet fortfarande kör). 
-
-#### Om inte setup-skriptet funkar (t.ex. om du inte skapat en spot-instans)
-
-Kopiera `setup.sh` från hello-trouble-repot (behövs bara om siege inte fanns):
-
-	scp setup.sh ec2:
-	ssh ec2 ./setup.sh
-	
-	
-Nu ska du t.ex. ha verktyget `siege` på din ec2-instans.
 
 #### Starta hello-dataloader på ec2
 
