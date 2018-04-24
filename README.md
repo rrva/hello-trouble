@@ -219,7 +219,7 @@ Se till att filen bara är läsbar av din användare:
 	
 	chmod 600 ~/.ssh/tprg-key.pem
 	
-Lägg till nedanstående i filen **~/.ssh/config**:	
+Lägg till nedanstående i filen **~/.ssh/config** med din favvo-editor:	
 	
 ```
 Host ec2
@@ -271,6 +271,7 @@ I en tredje terminal, undersök systemets last med verktyget *top*
 2. Hur ser maskinens totala last ut?
 
 Om du ökar antalet samtidiga anrop i lasttestet (ändra `-c6` till `-c60`)
+Du kan använda `nano` eller `vi` som editor i på ec2-maskinen.
 
 1. Hur beter sig svarstiderna nu?
 2. Hur beter sig systemets last?
