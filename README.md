@@ -330,27 +330,42 @@ Starta om din java-process med en ny jvm-flagga. Avbryt den som redan kör med <
 	
 Kör nu om lasttestet och kör om kommandona som ritar ut en flamegraph.
 	
+I grafen delas koden upp i olika färger
+
+    * Rött för JVM-interna metoder
+    * Grönt för kod i JDK:n (paketen java.*)
+    * Gult för applikations eller tredjeparts-libbar
+
+Sök efter breda "flammor". I toppen av en flamma, innan den förgrenar
+sig, kommer du kunna hitta applikationskod som bränner mycket tid. Leta efter
+ledtrådar i grafen.
+
+
 	
 ## Diskussion om vad undersökningen gav
 
 * Diskutera resultaten med din labbkompis. Var ligger flaskhalsen?
-* Läs koden
-* Läs koden i tredjepartsbibliotek
-* Föreslå förbättringar
 
+## Gräv mer i koden
+
+Öppna koden i en IDE helst IntelliJ, en version som har Gradle och Kotlin-pluginen installerad. (De är oftast detta default). Undersök kod som verkar sticka ut i flame graphen.
+
+Kör systemet lokalt igen. Sätt breakpoints i din debugger. Liten hint: Man kan sätta breakpoints för exceptions så här: <https://www.jetbrains.com/help/idea/creating-exception-breakpoints.html>
+
+**Använd frågan som lasttestet kör mot systemet när du debuggar**. Den finns i _loadtest-query.json_
+
+
+### SPOILER ALERT FLER LEDTRÅDAR NEDAN
+
+* Att regelmässigt använda exceptions i ditt programflöde kan kosta tid (Use exceptions for exceptional cases). 
+* I java finns en standard för getters och setters på fält kallad JavaBeans-standarden. Den säger att om man vill läsa fältet `firstName` från ett objekt via extern kod ska man ropa på metoden `getFirstName()`.
+* JavaBeans-standarden tillåter, _men kräver inte_, att fält av typen `Boolean` kan läsas med ett anrop till en metod som börjar på `is`. Dvs fältet `deleted` kan läsas via metoden `isDeleted`
+* I programmeringsspråket Kotlin finns ett koncept som heter data-klasser. Det genererar getters och setters automatiskt utan boilerplate.
+* Kotlin data-klasser exponerar alla sina fält via `getXXX()`
 
 
 ### Öppna frågor
 
+* Diskutera en möjlig fix
 * Vad är för/nackdelen med flamegraphs?
-* Hur gör man om man inte kör under Linux? (googla)
-	
-
-### Överkurs
-
-Eventuellt kan din fil fortfarande sakna viktiga led i metodanropen, då kan man göra om körningen med några miljövariabler satta. Det som saknas beror på fenomenen inlining (att vissa metodanrop optimeras bort genom att metodkroppens kod klistras in i en existerande metod till exempel).
-
-För att få lite högre upplösning på din graf, sätt dem och kör om `perf-java-flames` (med lasttestet igång igen om du stoppat det).
-
-	export PERF_MAP_OPTIONS=unfoldall
-	export PERF_COLLAPSE_OPTS=--inline
+* Hur gör man om man inte kör under Linux? T.ex. .NET? (googla)
